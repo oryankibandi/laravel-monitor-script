@@ -1,0 +1,24 @@
+
+#!/bin/bash
+
+# Configuration
+SERVICE_NAME="php-service-name" 
+THRESHOLD=80 # CPU usage threshold in percentage
+CHECK_INTERVAL=10 # Interval to check CPU usage in seconds
+
+while true; do
+    # Check CPU usage of the service
+    CPU_USAGE=$(ps -C "$SERVICE_NAME" -o %cpu= | awk '{sum+=$1} END {print sum}')
+
+    # Check if CPU usage exceeds the threshold
+    if (( $(echo "$CPU_USAGE > $THRESHOLD" | bc -l) )); then
+        echo "$(date): CPU usage of $SERVICE_NAME is $CPU_USAGE%, restarting service..."
+        sudo systemctl restart "$SERVICE_NAME"
+        echo "$(date): $SERVICE_NAME restarted."
+    else
+        echo "$(date): CPU usage of $SERVICE_NAME is $CPU_USAGE%, no action taken."
+    fi
+
+    # Wait for the next check
+    sleep "$CHECK_INTERVAL"
+done
